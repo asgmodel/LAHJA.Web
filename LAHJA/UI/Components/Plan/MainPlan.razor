@@ -1,0 +1,189 @@
+﻿ 
+@using LAHJA.Data.UI.Components
+@using LAHJA.Data.UI.Components.Base
+@inject IDialogService DialogService
+@using LAHJA.Data.UI.Components.Plan
+@using LAHJA.Data.UI.Components.Plan.Css
+@inject ISnackbar Snackbar
+  
+@if (!IsDialog)
+{
+
+
+
+
+@*      <MudTabs Outlined="true">
+         <MudTabPanel Text="Api" Icon="@Icons.Material.Filled.Api" />
+         <MudTabPanel Icon="@Icons.Material.Filled.Build" />
+         <MudTabPanel Text="Bug Report" Icon="@Icons.Material.Filled.BugReport" />
+     </MudTabs> *@
+
+    <MudGrid Class="@(@MainPlanStyle.MainPlanGrid+" w-100")" Justify="Justify.SpaceAround" >
+
+        @if (DataBuild != null)
+        {
+            <MudItem Class="@MainPlanStyle.MainPlanItem">
+                <TemplatePlan IsLoading="IsLoading" Params="@DataBuild" />
+            </MudItem>
+        }
+
+
+
+        else if (DataBuilds != null && DataBuilds.Any())
+        {
+
+            
+
+            @foreach (var item in DataBuilds)
+            {
+                <MudItem Class="@MainPlanStyle.MainPlanItem" xs="12" sm="12" md="3">
+                    <TemplatePlan IsLoading="IsLoading" Params="@item" OnSubmit="OnSubmitButton" />
+                </MudItem>
+            }
+        }
+
+
+        else
+        {
+            <MudAlert Class="@MainPlanStyle.MainPlanAlert" Severity="Severity.Error">@Error</MudAlert>
+        } 
+             
+    
+    </MudGrid>
+        
+ 
+}
+
+
+@code
+{
+    [Parameter] public bool IsLoading { get; set; }
+    public string Error { get; set; } = "No Data  ";
+    [Parameter]
+    public bool IsDialog { get; set; } = false;
+    [Parameter]
+    public InputTypePlan InputTypeComponts { get; set; } = InputTypePlan.List;
+    [Parameter]
+    public SubscriptionPlanInfo DataBuild { get; set; } = null;
+    [Parameter]
+    public bool IsAuth { get; set; } = false;
+    [Parameter]
+    public IEnumerable<SubscriptionPlanInfo> DataBuilds { get; set; } = null;
+    [Parameter]
+
+    public EventCallback<DataBuildPlansBase> OnSubmit { get; set; }
+
+
+
+    private async void OnSubmitButton(SubscriptionPlanInfo planInfo)
+    {
+        if (OnSubmit.HasDelegate)
+        {
+
+            await OnSubmit.InvokeAsync(new DataBuildPlansBase { PlanId = planInfo.Id });
+
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+
+
+
+     
+
+            @if (IsDialog)
+            {
+                       await Task.Delay(1000); 
+                        await ShowDuilog();
+
+
+
+            }
+
+
+
+
+
+        }
+        catch(Exception ex)
+        {
+
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+
+
+
+    }
+
+
+
+    private async Task ShowDuilog()
+    {
+        try
+        {
+
+            var parameters = new DialogParameters<MudDialogTemplatePlan>
+              {
+
+                  {x =>x.Items,DataBuilds},
+                  {x =>x.SingleItem,DataBuild},
+                  {x =>x.InputTypeComponts,InputTypePlan.List}
+              };
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
+
+            var dialog = await DialogService.ShowAsync<MudDialogTemplatePlan>("", parameters, options);
+
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                var pbj = (SubscriptionPlanInfo)result.Data;
+                if (OnSubmit.HasDelegate)
+                {
+
+                    await OnSubmit.InvokeAsync(new DataBuildPlansBase { PlanId=pbj.Id});
+
+                }
+
+
+            }
+            else
+            {
+
+                if (OnSubmit.HasDelegate)
+                {
+                    await OnSubmit.InvokeAsync(null);
+                }
+            }
+
+            StateHasChanged();
+        }
+
+
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+
+
+    }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+

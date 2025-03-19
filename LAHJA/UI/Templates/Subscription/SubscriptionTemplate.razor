@@ -1,0 +1,42 @@
+﻿@using Domain.ShareData
+@using LAHJA.Data.UI.Components.Plan
+@using LAHJA.Data.UI.Components.Subscription
+@using LAHJA.Helpers.Services
+@using LAHJA.UI.Components.Plan
+@using LAHJA.UI.Components.ProFile.Settings
+@inject LAHJA.Data.UI.Templates.Subscription.TemplateSubscription Template
+
+@* 
+<Subscription DataBuild="_dataBuild" />
+
+
+@code {
+
+	private List<UserSubscription> _dataBuild = new List<UserSubscription>();
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+
+		if (firstRender)
+		{
+			var result = await Template.GetAllSubscriptions();
+
+			if (result.Succeeded)
+			{
+				_dataBuild = result.Data.ToList();
+
+			}
+			else
+			{
+				
+			}
+
+		}
+
+		StateHasChanged();
+
+	}
+	
+
+} *@

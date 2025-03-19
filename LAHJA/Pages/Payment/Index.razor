@@ -1,0 +1,61 @@
+﻿ 
+@* 
+
+ @using LAHJA.Data.UI.Components.Category
+ @using LAHJA.Data.UI.Templates.Payment
+ @using MudBlazor
+ @using global::Shared.Constants.Router
+ @inject LAHJA.Data.UI.Templates.Plans.TemplatePlans Template
+ @inject LAHJA.Data.UI.Templates.Payment.TemplatePayment Template2
+
+ @inject NavigationManager Navigation
+
+
+ @if (data != null)
+ {
+     <PaymentComponts Params="data" />
+ }
+
+ @code{
+
+
+     private SubscriptionPlanInfo data;
+     private List<string> errors; 
+
+
+     [Parameter] public string planId { get; set; }
+
+     protected override async void OnInitialized()
+     {
+
+
+         if (planId != null)
+         {
+             var res2 = await Template2.getCheckoutUrlPage(new DataBuildPaymentBase { PlanId = "price_1Pst3IKMQ7LabgRTZV9VgPex" });
+             var res = await Template.OnSubmitSubscriptionPlan(new DataBuildPlansBase { PlanId = planId });
+             if (res.Succeeded)
+             {
+                 data = res.Data;
+
+                 if (res2.Data!=null)
+                     Navigation.NavigateTo(res2.Data.url ?? RouterPage.HOME);
+                 StateHasChanged();
+             }
+             else
+             {
+                 errors = res.Messages;
+             }
+         }
+
+
+
+       // StateHasChanged();
+
+
+
+
+
+     }
+
+ }
+ *@

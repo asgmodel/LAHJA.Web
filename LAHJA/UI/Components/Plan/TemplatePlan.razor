@@ -1,0 +1,379 @@
+﻿@using Domain.ShareData
+@using LAHAJ.Loading
+@using LAHJA.Data.UI.Components.Base
+@using LAHJA.Data.UI.Components.Plan
+
+
+@inject NavigationManager Navigation
+@inherits CardPlan<SubscriptionPlanInfo>
+@inject ISnackbar Snackbar
+@inject IManageLanguageService _manageLanguageService
+@using LAHJA.Them
+@using System.Globalization
+@* @attribute [Allow] *@
+@if (Params != null)
+{
+
+
+    @* plan - card *@
+    <div class="p-0 m2">
+
+        <MudCard Class="@("p-0  position-relative m-auto "+@Params.ClassImport)">
+
+            @*    @if (_isLoading)
+            {
+                <Loading IsLoading="_isLoading" />
+
+            }else{ *@
+            <MudText Typo="Typo.h6"  Class="@(Params.HeaderImport+" w-100")"> @Params.Name</MudText>
+            <small  class="mx-3">@Params.Description</small>
+            <MudCardContent>
+                <MudText Typo="Typo.body1" Class="mb-1">
+                    @if (Params.IsPaid==true)
+                    {
+                        <MudText Typo="Typo.h5"> @(Params.MonthlyPrice)$ <small style="font-size:9px">/ @DMonth[lg]</small> </MudText>
+                    }
+                </MudText>
+                <MudList Dense="true" T="object">
+
+                    @if (_isDisplayButton)
+                    {
+                        <MudCardActions>
+                            <MudButton style="width:100%" Variant="Variant.Filled" Color="@AppColors.BASE_COLOR_ENUM" OnClick="@(()=>Submit(@Params))" Class="@AppTextStyle.TEXT_TRANSFORM_NORMAL">Select Plan</MudButton>
+                        </MudCardActions>
+
+                    }
+                    <MudDivider />
+                    @if (Params.Features != null && Params.Features.Count() > 0)
+                    {
+                        //Services List
+                        <MudListItem Text="Services" @bind-Expanded="_expanded">
+                            <NestedList>
+
+                                @foreach (var feature in Params.Features)
+                                {
+                                    <MudListItem>
+                                        <FeaturePlanCard Param="feature"  AllowUpdate="_allowUpdate" IsAuth="IsAuth" OnClickDelete="ONclickDeleteNumberFeture" OnClickEdit="ONclickEditNumberFeture" />
+                                    </MudListItem>
+
+                                }
+                            </NestedList>
+                        </MudListItem>
+
+
+
+                    }
+                </MudList>
+                <MudDivider />
+                <MudCardActions Class="w-100">
+                    @if (!_isDisplayButton)
+                    {
+                        @if (_isUpgrade)
+                        {
+
+                            <MudButton Class="@(@AppTextStyle.TEXT_TRANSFORM_NORMAL+" w-100")" Variant="Variant.Filled"
+                            Color="@AppColors.BASE_COLOR_ENUM" OnClick="@(()=>OnSubmitUpgrade(@Params))">@GetTranslation("Upgrade")</MudButton>
+
+                        }
+                        else if (_allowUpdate)
+                        {
+
+                            @*  <MudButton Class="@(@AppTextStyle.TEXT_TRANSFORM_NORMAL+"  w-100")"
+                            Variant="Variant.Filled" Color="@AppColors.BASE_COLOR_ENUM"
+                                       OnClick="@(()=>OnSubmitConfirm(@Params))">@GetTranslation("Confirm")</MudButton> *@
+
+                        }
+
+                        @* <MudButton Class="@(@AppTextStyle.TEXT_TRANSFORM_NORMAL+" px-3")" Variant="Variant.Filled" Color="Color.Default" OnClick="@(()=>OnSubmitCancel(@Params))">Cancel</MudButton> *@
+                    }
+
+                </MudCardActions>
+            </MudCardContent>
+            @* } *@
+
+        </MudCard>
+    </div>
+
+}
+
+
+
+
+
+@code {
+
+    [Parameter] public bool AllowUpdate { get => _allowUpdate; set => _allowUpdate = value; }
+
+    [Parameter] public bool IsUpgrade { get => _isUpgrade; set => _isUpgrade = value; }
+
+    [Parameter] public bool IsExpanded { get => _expanded; set=>_expanded=value; }
+
+    [Parameter] public bool IsLoading { get => _isLoading; set => _isLoading = value; }
+
+    [Parameter] public bool IsDisplaySelectButton { get => _isDisplayButton; set=>_isDisplayButton=value; }
+
+    [Parameter] public SubscriptionPlanInfo? Params { get; set; }
+
+    [Parameter] public EventCallback<SubscriptionPlanInfo> SubmitUpgrade { get; set; }
+    [Parameter] public EventCallback<SubscriptionPlanInfo> SubmitConfirm { get; set; }
+    [Parameter] public EventCallback<SubscriptionPlanInfo> SubmitCancel { get; set; }
+
+
+    private bool _isDisplayButton = true;
+    private bool _expanded = false;
+    private bool _isLoading = true;
+
+    private bool _allowUpdate = false;
+
+    private bool _isUpgrade { get; set; } = false;
+    private string lg { get; set; } = "en";
+    private Dictionary<string, string> DMonth = new()
+    {
+        { "en", "month" },
+        { "ar", "شهر" }
+    };
+
+    protected override void OnInitialized()
+    {
+        lg= CultureInfo.CurrentUICulture.Name;
+    }
+
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         lg = await _manageLanguageService.GetLanguageAsync();
+    //         StateHasChanged();
+    //     }
+    // }
+
+    private Color GetChipColor(bool status)
+
+    {
+
+        return status == true ? Color.Success : Color.Error;
+
+    }
+
+    private async Task OnSubmitConfirm(SubscriptionPlanInfo input)
+    {
+        if (SubmitConfirm.HasDelegate && input != null)
+        {
+            await SubmitConfirm.InvokeAsync(input);
+        }
+    }
+
+    private async Task OnSubmitCancel(SubscriptionPlanInfo input)
+    {
+        if (SubmitCancel.HasDelegate && input != null)
+        {
+            await SubmitCancel.InvokeAsync(input);
+        }
+    }
+
+    private async Task OnSubmitUpgrade(SubscriptionPlanInfo input)
+    {
+        if (SubmitUpgrade.HasDelegate && input != null)
+        {
+            await SubmitUpgrade.InvokeAsync(input);
+        }
+    }
+
+
+    private async Task Submit(SubscriptionPlanInfo input)
+
+    {
+
+        try
+
+        {
+
+            if (OnSubmit.HasDelegate)
+
+            {
+
+                await OnSubmit.InvokeAsync(input);
+
+            }
+
+
+
+
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            Snackbar.Add(ex.Message, Severity.Error);
+
+        }
+
+
+
+    }
+
+    private async void ONclickDeleteNumberFeture(FeaturePlanInfo numberOfService)
+
+    {
+
+        try
+
+        {
+
+
+
+
+
+            Params.Price -= numberOfService.Price;
+
+            Params.Features.Remove(numberOfService);
+
+
+
+            StateHasChanged();
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            Snackbar.Add(ex.Message, Severity.Error);
+
+        }
+
+
+
+    }
+
+    private async void ONclickEditNumberFeture(FeaturePlanInfo numberOfService)
+
+    {
+
+        try
+
+        {
+
+
+
+
+
+            Params.Price += numberOfService.Price;
+
+            StateHasChanged();
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            Snackbar.Add(ex.Message, Severity.Error);
+
+        }
+
+
+
+    }
+
+    private async void ONclickEditNumberService(FeaturePlanInfo featurePlanInfo)
+
+    {
+
+        try
+
+        {
+
+
+
+            CalculateTotalPrice();
+
+            StateHasChanged();
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            Snackbar.Add(ex.Message, Severity.Error);
+
+        }
+
+
+
+    }
+
+    private void CalculateTotalPrice()
+
+    {
+
+
+
+        try
+
+        {
+
+            // Price = 0;
+
+            // foreach (var item in Params.Services)
+
+            // {
+
+            //     Price += item.Price;
+
+            // }
+
+
+
+            // foreach (var item in Params.numberOfServices)
+
+            // {
+
+            //     Price += item.Price;
+
+            // }
+
+
+
+
+
+
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+
+
+        }
+
+    }
+
+    private string GetTranslation(string key)
+    {
+        return lg == "ar"
+            ? TransAr.GetValueOrDefault(key, key)
+            : TransEn.GetValueOrDefault(key, key);
+    }
+
+    private Dictionary<string, string> TransEn = new Dictionary<string, string>()
+    {
+        { "Confirm", "Confirm" },
+        { "Upgrade", "Upgrade" },
+
+    };
+
+    private Dictionary<string, string> TransAr = new Dictionary<string, string>()
+    {
+        { "Confirm", "تأكيد" },
+        { "Upgrade", "تحديث" },
+
+    };
+
+}

@@ -1,0 +1,439 @@
+﻿@using Domain.ShareData
+@using LAHJA.Data.UI.Components
+@using LAHJA.Data.UI.Components.Payment.CreditCard
+@using LAHJA.Data.UI.Components.Payment.CreditCards
+@using LAHJA.Helpers.Services
+@using LAHJA.Them   
+@using LAHJA.UI.Components.General.Button
+@using LAHJA.UI.Components.Payment.CreditCard
+@using LAHJA.UI.Components.TabelCard
+@using MudBlazor
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject LanguageService languageService
+@inject IManageLanguageService _manageLanguageService
+
+
+@attribute [Authorize]
+
+
+<MudExpansionPanels>
+    @if (creditCards == null || creditCards.Count == 0)
+    {
+        <MudExpansionPanel @bind-Expanded="@open" HideIcon="true">
+            <TitleContent>
+                <div class="d-flex">
+                   @*  <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                        @GetTranslation("AddNewCard")
+                    </MudAlert> *@
+                    <MudCard Elevation="1" Class="m-2 p-2">
+                        <MudIcon Color="@AppColors.BASE_COLOR_ENUM" @onclick="OnAddCard" Icon="@(open ? Icons.Material.Filled.Close : Icons.Material.Filled.Add)" class="ml-auto"></MudIcon>
+                    </MudCard>
+                </div>
+            </TitleContent>
+          @*   <ChildContent>
+                <FormCard IsUpdate="isUpdate" BuildData="selectedCard" 
+                    OnClickSave="OnSaveAddCard" 
+                    OnEdit="OnSaveUpdateCard" 
+                    OnDelete="OnSaveDeleteCard"
+                    SubmitActiveCreditCard="OnSelectedActiveCard"/>
+ *@
+            @* </ChildContent> *@
+        </MudExpansionPanel>
+    }
+    else
+    {
+       
+            <MudExpansionPanel   @bind-Expanded="@open"  HideIcon="true">
+                <TitleContent>
+                    <MudCardHeader Class="p-0 d-flex flex-row justify-content-center align-items-center ">
+                        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">@GetTranslation("CreditCards")</MudText>
+                    </MudCardHeader>
+                    <div class="d-flex flex-column">
+                        <MudCard Elevation="1" Class="m-2 p-2">
+                            <MudIcon Color="@AppColors.BASE_COLOR_ENUM" @onclick="OnAddCard" Icon="@(Icons.Material.Filled.Add)" class="ml-auto"></MudIcon>
+                        </MudCard>
+               @*           <MudRadioGroup  T="CardDetails" ValueChanged="OnSelectedCard"> *@
+                            <div class="d-flex flex-wrap justify-content-start align-items-center w-100">
+                                @* @foreach (var card in creditCards) *@
+                                @* { *@
+                            <TabelDashCard T="CardDetailsVM" DataAndEventBuildTabel="dataAndEvent"
+                                               StateCounts="cardStates"
+                                               ActionTabels="groupAction"
+                                           />
+                                @* BarTabel = "TranslationsLST" *@
+                                    @* <CreditCard BuildData="card" OnSetDefault="OnSelectedCard" OnDelete="OnDeleteCard" OnEdit="OnEditCard" /> *@
+                                @* } *@
+                            </div>
+                        @* </MudRadioGroup> *@
+                        @* @if (_isSelected)
+                        {
+                        <CustomButton OnClick="@OnConfirmSelectedCard" IsProcessing="isProcessing">
+                                @GetTranslation("Confirm")
+                            </CustomButton>
+                        } *@
+                    </div>
+                </TitleContent>
+            </MudExpansionPanel>
+        
+    }
+</MudExpansionPanels>
+
+@code
+{
+
+    private string lg = "ar";
+
+    private DataAndEventBuildTabelCard<CardDetailsVM> dataAndEvent;
+
+    [Parameter] public EventCallback<CardDetails> SelectedActiveCard { get; set; }
+    [Parameter] public EventCallback<CardDetails> CreateCard { get; set; }
+    [Parameter] public EventCallback<CardDetails> EditCard { get; set; }
+    [Parameter] public EventCallback<CardDetails> DeleteCard { get; set; }
+
+    [Parameter]
+    public List<CardDetails> BuildData
+    {
+        get => creditCards.Cast<CardDetails>().ToList();
+        set
+        {
+            if (value != null)
+            {
+                creditCards = value.Cast<CardDetailsVM>().ToList();
+            }
+        }
+    }
+    private List<CardDetailsVM> creditCards;
+    private CardDetailsVM selectedCard = new CardDetailsVM();
+    private bool open, isUpdate = false;
+    private bool _expanded = false;
+    private bool _isSelected = false;
+    List<CardStateCount<string>>? cardStates = null;
+    GroupActionTabels groupAction = new GroupActionTabels();
+    private static readonly Dictionary<string, Dictionary<string, string>> TranslationsLST = new()
+        {
+            ["en"] = new()
+            {
+                ["Text1"] = "Add  CreditCard",
+                ["Text2"] = "",
+                ["Description"] = "",
+                ["ButtonLink"] = "Add CreditCard"
+            },
+            ["ar"] = new()
+            {
+                ["Text1"] = "إضافة بطاقة أئتمان ",
+                ["Text2"] = "",
+                ["Description"] = "",
+                ["ButtonLink"] = "إضافة بطاقة أئتمان "
+            }
+        };
+
+    private IDialogReference dialogRef;
+    private Dictionary<string, string[]> ColomsTrans = new Dictionary<string, string[]>
+    {
+        { "en", new string[] { "Card Number", "Holder Name","CardType", "ExpirationDate","Status" } },
+        { "ar", new string[] {"رقم البطاقة", "حامل البطاقة", "نوع البطاقة", "تأريخ الانتهاء","الحالة"} }
+    };
+
+
+    protected override async void OnInitialized()
+    {
+        ChangeLanguage(lg);
+
+        if (creditCards == null)
+        {
+            creditCards = new List<CardDetailsVM> { new CardDetailsVM { CardNumber = "454353455", HolderName = "Azzaldeen", CardType = "MasterCard", ExpirationDate = "27/2", IsSelected = true, CVC="****" } };
+        }
+        else if (SelectedActiveCard.HasDelegate)
+        {
+            if ((selectedCard == null || string.IsNullOrEmpty(selectedCard.CardNumber)) && creditCards?.Count() > 0)
+                selectedCard = creditCards[0];
+
+            if (selectedCard!=null)
+                await SelectedActiveCard.InvokeAsync(selectedCard);
+        }
+
+
+
+        initData(creditCards);
+
+    }
+
+    private void initData(List<CardDetailsVM> dataBuild)
+    {
+
+
+
+
+        dataAndEvent = new()
+            {
+                DataBuild = dataBuild,
+                LabelColumns = ColomsTrans[lg].ToList(),
+
+                Events = new()
+                {
+                    OnRowClicked = EventCallback.Factory.Create<CardDetailsVM>(this, OnShowDetails)
+                }
+            };
+
+        // foreach (var item in dataBuild)
+        // {
+
+        //     cardStates?.Add(new()
+        //         {
+        //             Value = item.CardNumber,
+        //             Label = item.IsSelected ? "Active" : "UnActive",
+        //         });
+        // }
+
+        cardStates = new()
+        {
+
+            new()
+            {
+                Value="6",
+                Label="Active",
+
+
+            },
+
+               new()
+            {
+                Value="1",
+                Label="UnActive",
+
+
+            },
+
+        };
+        groupAction.Actions = new()
+        {
+            new()
+            {
+                Icon=@Icons.Material.Filled.AddCircle
+                ,
+                Tag="create"
+                ,
+                Name="انشاء",
+
+            },
+            // new()
+            // {
+            //     Icon=@Icons.Material.Filled.Delete
+            //     ,
+            //     IsMudChip=false,
+            //     Tag="delete"
+            // }
+        };
+        groupAction.ChipClicked = OnChipClicked;
+
+        StateHasChanged();
+
+        // groupAction.CreateSpaceClicked = OnSubmitCreateSpace;
+    }
+
+
+    private async Task OnChipClicked(CardActionTabel action)
+    {
+        if (action.Tag == "delete")
+        {
+            Snackbar.Add("fgffg", Severity.Error);
+
+        }
+        else if (action.Tag == "create")
+        {
+            await OnAddCard();
+
+        }
+
+        // await Task.CompletedTask;
+
+    }
+
+    private async Task OnShowDetails(CardDetailsVM card)
+    {
+        await ShowCardDialog(GetTranslation("CreditCards"), false, true, card.GetClone());
+    }
+
+    private async Task OnAddCard()
+    {
+        isUpdate = false;
+        await ShowCardDialog(GetTranslation("AddNewCard"), false, false, new CardDetails());
+
+    }
+
+    private async Task OnEditCard(CardDetailsVM card)
+    {
+        isUpdate = true;
+        open = true;
+        selectedCard = card;
+        StateHasChanged();
+        await ShowCardDialog(GetTranslation("EditCard"), true, false, card.GetClone());
+    }
+
+    private async void OnConfirmSelectedCard()
+    {
+
+
+        if (SelectedActiveCard.HasDelegate && selectedCard != null)
+        {
+            // foreach (var item in creditCards)
+            // {
+            //     if (!item.IsSelected)
+            //         item.IsSelected = false;
+            // }
+            selectedCard.IsSelected = true;
+            await SelectedActiveCard.InvokeAsync(selectedCard.GetClone());
+        }
+    }
+
+    private async Task OnSelectedActiveCard(CardDetails data)
+    {
+        if (data != null && dialogRef != null && !dialogRef.Result.IsCanceled)
+        {
+            _isSelected = true;
+            if (SelectedActiveCard.HasDelegate)
+            {
+                await SelectedActiveCard.InvokeAsync(data);
+            }
+        }
+
+        // dialogRef.Close();
+    }
+    private async Task OnSaveAddCard(CardDetails data)
+    {
+            if (data != null && dialogRef != null && !dialogRef.Result.IsCanceled)
+            {
+            if (creditCards.Any(x => x.CardNumber == data.CardNumber))
+                Snackbar.Add(GetTranslation("CardAlreadyExistsMsg"), Severity.Error);
+            else
+            {
+
+                creditCards.Add(data.GetCloneVM());
+                _isSelected = true;
+                if (CreateCard.HasDelegate)
+                {
+
+                    await CreateCard.InvokeAsync(data);
+                }
+                dialogRef.Close();
+            }
+            }
+        
+    }
+    private async Task OnSaveUpdateCard(CardDetails data)
+    {
+
+            if (data != null && dialogRef != null && !dialogRef.Result.IsCanceled)
+            {
+
+                    if (EditCard.HasDelegate)
+                    {
+                        await EditCard.InvokeAsync(data);
+                    }
+
+                    dialogRef.Close();
+
+                
+            }
+        
+    }
+    private async void OnSaveDeleteCard(CardDetails card)
+    {
+        if (DeleteCard.HasDelegate && card != null)
+            await DeleteCard.InvokeAsync(selectedCard.GetClone());
+    }
+
+
+
+
+    private async Task ShowCardDialog(string title, bool isUpdate, bool isShowDetails, CardDetails? data)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title",title },
+            { "BuildData", data! },
+            { "IsUpdate", isUpdate },
+            { "IsShowDetails", isShowDetails },
+            { "SubmitActiveCreditCard", EventCallback.Factory.Create<CardDetails>(this,OnSelectedActiveCard) },
+            { "OnClickSave", EventCallback.Factory.Create<CardDetails>(this,OnSaveAddCard) },
+            { "OnEdit", EventCallback.Factory.Create<CardDetails>(this, OnSaveUpdateCard) },
+            { "OnDelete", EventCallback.Factory.Create<CardDetails>(this, OnSaveDeleteCard) }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        dialogRef = DialogService.Show<FormCard>("", parameters, options);
+
+        var result = await dialogRef.Result;
+
+        // if (result?.Canceled==false)
+        // {
+
+        // }
+
+    }
+    private string GetTranslation(string key)
+    {
+        if (lg == "ar")
+        {
+            return TransAr.ContainsKey(key) ? TransAr[key] : key;
+        }
+        else
+        {
+            return TransEn.ContainsKey(key) ? TransEn[key] : key;
+        }
+    }
+
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+      // "en" أو "ar"
+
+        if (firstRender)
+        {
+            lg = await _manageLanguageService.GetLanguageAsync();
+            initData(creditCards);
+           await InvokeAsync(StateHasChanged);
+        }
+
+
+    }
+    private void ChangeLanguage(string language)
+    {
+        // ااخ
+        lg = language;
+        StateHasChanged();
+    }
+
+    public static Dictionary<string, string> TransEn = new Dictionary<string, string>()
+    {
+        { "CreditCards", "Credit Cards" },
+        { "AddNewCard", "Add New Card" },
+        { "EditCard", "Edit Credit Card" },
+        { "Expiry", "Expiry" },
+        { "CardType", "Card Type" },
+        { "Confirm", "Confirm" },
+        { "Cancel", "Cancel" },
+        { "Update", "Update" },
+        { "Save", "Save" },
+        { "CardAlreadyExistsMsg", "The card already exists.!!" },
+    };
+
+    public static Dictionary<string, string> TransAr = new Dictionary<string, string>()
+    {
+        { "CreditCards", "بطاقات الائتمان" },
+        { "AddNewCard", "إضافة بطاقة جديدة" },
+        { "EditCard", "تعديل بطاقة الائتمان" },
+        { "Expiry", "تاريخ الانتهاء" },
+        { "CardType", "نوع البطاقة" },
+        { "Confirm", "تأكيد" },
+        { "Cancel", "إلغاء" },
+        { "Update", "تحديث" },
+        { "Save", "حفظ" },
+        { "CardAlreadyExistsMsg", "البطاقة موجودة مسبقا !!" },
+    };
+ 
+
+}

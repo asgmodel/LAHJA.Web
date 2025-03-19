@@ -1,0 +1,52 @@
+﻿@using LAHAJ.Loading
+@using LAHJA.UI.Components.Auth
+@using LAHJA.Data.UI.Templates.Auth
+@using LAHJA.UI.Components.Index.MainSectionCard
+@using LAHJA.UI.Components.Plan
+
+@inject LAHJA.Data.UI.Templates.Plans.TemplatePlans Template
+
+@if (isLoading)
+{
+    <Loading IsLoading="isLoading" />
+}
+else{
+        
+    @if (Template != null)
+    {
+        <MainPlan IsLoading="isLoading" DataBuilds="Template.AllSubscriptionPlans"
+                  OnSubmit="Template.BuilderComponents.SubmitSubscriptionPlan" />
+    }
+}
+
+
+
+
+@code{
+
+
+    [Parameter] public int CountItemsShow{   set => _countItemsShow = value; get=>_countItemsShow; } 
+
+    [Parameter] public bool IsLoading { get => isLoading; set => isLoading = value; }
+
+    private int _countItemsShow = 4;
+
+    private bool isLoading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Template.getAllSubscriptionsPlansAsync(_countItemsShow,2);
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+
+
+    
+
+
+
+  } 

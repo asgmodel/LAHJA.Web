@@ -1,0 +1,76 @@
+﻿
+@using Domain.ShareData
+@using LAHAJ.Loading
+@using LAHJA.UI.Components.Category
+@using LAHJA.UI.Components.Plan
+@using LAHJA.UI.Templates.Plans
+
+ 
+ @inject IManageLanguageService _manageLanguageService
+
+@inject LAHJA.Data.UI.Templates.Plans.TemplatePlans Template
+
+
+
+@if (isLoading)
+
+{
+
+    <Loading IsLoading="isLoading" />
+
+}
+else
+{
+
+    @if (Template != null)
+    {
+
+        <MainCategory  DataBuild="Template.Categories" OnSubmit="Template.BuilderComponents.SubmitContainerPlans" />
+
+        @if (Template.SubscriptionPlans != null && Template.SubscriptionPlans.Count() > 0)
+        {
+
+            <MainPlan DataBuilds="Template.SubscriptionPlans" IsDialog="true"  OnSubmit="Template.BuilderComponents.SubmitSubscriptionPlan" />
+
+
+
+        }
+
+
+    }
+
+
+}
+
+ 
+@code
+{
+
+
+    [Parameter] public bool IsLoading { get => isLoading; set => isLoading = value; }
+
+    private bool isLoading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+
+
+        if (firstRender)
+        {
+
+            var CurrentLanguage = await _manageLanguageService.GetLanguageAsync();
+
+
+
+            await Template.OnInitialize();
+
+            isLoading = false;
+            StateHasChanged();
+
+        }
+
+        // var temp= Template.BuilderComponents.Categories;
+
+    }
+}

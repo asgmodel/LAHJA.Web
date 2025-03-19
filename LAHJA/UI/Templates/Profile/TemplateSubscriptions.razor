@@ -1,0 +1,81 @@
+﻿@* @page "/settings/subscriptions" *@
+@using Domain.ShareData
+@using LAHJA.Data.UI.Components
+@using LAHJA.Data.UI.Components.Plan
+@using LAHJA.Data.UI.Components.ProFileModel
+@using LAHJA.Data.UI.Templates.Payment
+@using LAHJA.UI.Components.Auth
+@using LAHJA.Data.UI.Templates.Auth 
+@using LAHJA.UI.Components.Plan
+@using LAHJA.UI.Components.ProFile
+@using LAHJA.UI.Components.ProFile.Settings
+@using LAHJA.UI.Components.ProFile.USettings
+@using Microsoft.AspNetCore.Authorization
+@using System.Globalization
+@attribute [Authorize]
+
+
+@inject IManageLanguageService _manageLanguageService
+
+@inject LAHJA.Data.UI.Templates.Profile.TemplateProfile Template
+@inject LAHJA.Data.UI.Templates.Subscription.TemplateSubscription TemplateSub
+@inject LAHJA.Data.UI.Templates.Payment.TemplatePayment TemplatePayment
+
+
+
+@if(Template!=null && buildData!=null){
+    <Subscription 
+        Language="@CultureInfo.CurrentUICulture.Name"
+        DataBuild="buildData"
+        SubmitCheckoutManage="OnSubmitCheckoutManage"
+        SubmitPause="TemplateSub.BuilderComponents.SubmitPause"
+        SubmitResume="TemplateSub.BuilderComponents.SubmitResume"
+        SubmitDelete="TemplateSub.BuilderComponents.SubmitDelete" />
+}
+
+@code{
+
+    private List<DataBuildUserSubscriptionInfo> buildData;
+    private string lg="ar";
+
+
+
+    private async Task OnSubmitCheckoutManage(DataBuildUserSubscriptionInfo dataBuild)
+    {
+        ///TemplatePayment.BuilderComponents.SubmitCheckoutManage = EventCallback.Factory.Create<DataBuildPaymentBase>(this, OnRowClicked);
+        if (TemplatePayment.BuilderComponents.SubmitCheckoutManage != null)
+        {
+            await TemplatePayment.BuilderComponents.SubmitCheckoutManage(new() { PlanId = dataBuild.PlanId });
+        }
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // lg = CultureInfo.CurrentUICulture.Name;
+
+        if (firstRender)
+        {
+            // lg = await _manageLanguageService.GetLanguageFromSessionAsync();
+            var res= await Template.GetDataBuildSubscriptions();
+            if (res.Succeeded)
+            {
+                buildData = res.Data;
+            }
+            else 
+            {
+                
+            }
+
+            
+        }
+
+
+        StateHasChanged();
+    }
+
+    
+
+
+
+  } 
