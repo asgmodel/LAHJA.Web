@@ -20,7 +20,7 @@
           MultiSelection="@MultiSelection"
           RowStyle="RowStyle"
           Elevation="0"
-          Filterable="false">
+          RowsPerPage="@RowsPerPage">
 
     <HeaderContent>
         <MudTh Class="header-tabel-th"> </MudTh>
@@ -94,7 +94,9 @@
         }
 
     </RowTemplate>
-
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
 </MudTable>
 
 @code {
@@ -103,7 +105,7 @@
     [Parameter] public bool MultiSelection { get; set; } = false;
     [Parameter] public EventBuildTabelCard<T>? Events { get; set; }
 
-
+    [Parameter] public int RowsPerPage { get; set; } = 5;
     private List<ColumnDefinition<T, object>> Columns2 = new List<ColumnDefinition<T, object>>();
 
     [Parameter] public List<string> LabelColumns { get; set; } = new();

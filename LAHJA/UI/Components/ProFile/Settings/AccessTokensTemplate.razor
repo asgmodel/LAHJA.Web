@@ -1,5 +1,6 @@
 ﻿@using Domain.ShareData
 @using LAHJA.Data.UI.Components
+@using LAHJA.Data.UI.Components.Base
 @using LAHJA.Data.UI.Models
 @using LAHJA.UI.Components.ProFile.USettings
 @using LAHJA.UI.Components.ServiceCard
@@ -13,12 +14,41 @@
 
 
 @attribute [Authorize]
+@if (TypeTable == TypeTableCard.DataGrid)
+{
 
-<TabelDashCard T="SessionTokenAuth" DataAndEventBuildTabel="dataAndEvent"
-               StateCounts="cardStates"
-               ActionTabels="groupAction"
-               BarTabel="TranslationsLST" />
+    <TabelGridDashCard T="SessionTokenAuth"
+                   Items="DataBuild"
+                   StateCounts="cardStates"
+                   ActionTabels="groupAction"
+                   BarTabel="TranslationsLST"
 
+                   LabelColumns="@ColomnsTrans[lg]"  
+
+                   ISShowColumnsEdit="true" 
+                   
+
+                    @* يمكنك اضافة اي  خصائص لي  DataGrid *@
+                    RowsPerPage="5" Filterable="true"
+                    SortMode="@SortMode.Multiple"
+                    ColumnResizeMode="ResizeMode.Column"
+                    ShowMenuIcon="true"
+                    Groupable=" false"
+                    Hover="true"
+                    Dense="true"
+                    MultiSelection="true" 
+                    
+                    />
+}
+
+else
+{
+
+    <TabelDashCard T="SessionTokenAuth" DataAndEventBuildTabel="dataAndEvent"
+                   StateCounts="cardStates"
+                   ActionTabels="groupAction"
+                   BarTabel="TranslationsLST" />
+}
 @code {
 
     private List<SessionTokenAuth> _dataBuild = new();
@@ -27,6 +57,7 @@
     private IDialogReference  dialog;
     private List<CardStateCount<string>>? cardStates = null;
     private GroupActionTabels groupAction = new GroupActionTabels();
+    [Parameter] public TypeTableCard TypeTable { set; get; } = TypeTableCard.Table;
 
     [Parameter] public List<SessionTokenAuth> DataBuild { set
         {

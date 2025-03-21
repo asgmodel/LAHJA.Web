@@ -22,10 +22,11 @@
 
     }
 
+    string[] ACTIVES = { "نشط", "active", "true" };
     private void ChangeStyle(object? _state)
     {
-        var s = _state?.ToString();
-        if (s == "نشط" || s == "Active" || s == "True")
+        var s = _state?.ToString().ToLower().Trim();
+        if (ACTIVES.Contains(s  ))
         {
             color = Color.Success;
         }

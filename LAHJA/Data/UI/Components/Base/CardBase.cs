@@ -11,8 +11,13 @@ namespace LAHJA.Data.UI.Components.Base
         Text,
         TextAndIcon,
         Card
-    } 
-
+    }
+    public enum TypeTableCard
+    {
+        Table,
+        DataGrid
+       
+    }
     public interface IStyleBaseComponentCard
     {
         public string? ClassItem { set; get; }

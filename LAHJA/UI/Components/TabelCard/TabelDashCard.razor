@@ -1,5 +1,6 @@
 ﻿@using LAHJA.Data.UI.Components
 
+@using LAHJA.Data.UI.Components.Base
 @using LAHJA.UI.Components.Icon
 @using LAHJA.UI.Components.TabelCard
 
@@ -40,6 +41,9 @@
     </div>
     @if (_dataAndEventBuildTabel != null && _dataAndEventBuildTabel?.DataBuild != null && _dataAndEventBuildTabel?.DataBuild.Count > 0)
     {
+       
+
+
         <TabelData T="T" DataBuild="_dataAndEventBuildTabel.DataBuild"
                    Events="_dataAndEventBuildTabel.Events"
                    LabelColumns="_dataAndEventBuildTabel.LabelColumns"
@@ -77,7 +81,6 @@
 
     [Parameter]
     public Dictionary<string, Dictionary<string, string>> BarTabel { set; get; } = new();
-
 
 
     private bool fixedheader = true;

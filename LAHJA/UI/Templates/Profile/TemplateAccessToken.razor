@@ -1,5 +1,6 @@
 ﻿@* @page "/settings/spaces/{*subscriptionId}" *@
 @using LAHJA.Data.UI.Components
+@using LAHJA.Data.UI.Components.Base
 @using LAHJA.Data.UI.Models
 @using LAHJA.UI.Components.ServiceCard
 @using LAHJA.UI.Components.TabelCard
@@ -19,6 +20,7 @@
 {
     <AccessTokensTemplate DataBuild="dataBuild"
                           Services="services"
+                          TypeTable="TypeTableCard.DataGrid"
                           SubmitCreateSessionToken="Template.BuilderComponents.SubmitCreateSessionToken"
                           SubmitValidate="Template.BuilderComponents.SubmitValidateSessionToken" 
                           SubmitDelete="Template.BuilderComponents.SubmitDeleteSessionAccessToken" 
