@@ -176,7 +176,7 @@
         @if (ISShowColumnsEdit){
         <TemplateColumn StickyRight="true">
             <CellTemplate>
-                <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" OnClick="@(()=>HandleRowClick(context.Item))" />
             </CellTemplate>
         </TemplateColumn>
         }
@@ -196,6 +196,7 @@
 
     [Parameter] public bool ISShowColumnsEdit { set; get; } = true;
 
+    [Parameter] public EventCallback<T> EditClicked { get; set; }
 
     private string SearchText { get; set; } = "";
 
@@ -263,5 +264,9 @@
         return prop?.PropertyType == typeof(bool);
     }
 
+    private void HandleRowClick(T Item)
+    {
+        EditClicked.InvokeAsync(Item);
+    }
 
 }
