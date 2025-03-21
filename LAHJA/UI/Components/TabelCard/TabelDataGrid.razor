@@ -174,7 +174,7 @@
         }
 
         @if (ISShowColumnsEdit){
-        <TemplateColumn StickyRight="true">
+        <TemplateColumn StickyRight="IsStickyRight" StickyLeft="IsStickyLeft" >
             <CellTemplate>
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" OnClick="@(()=>HandleRowClick(context.Item))" />
             </CellTemplate>
@@ -195,7 +195,8 @@
     [Parameter] public Dictionary<string, string> LabelColumns { get; set; } = new();
 
     [Parameter] public bool ISShowColumnsEdit { set; get; } = true;
-
+    [Parameter] public bool IsStickyRight { set; get; } = false;
+    [Parameter] public bool IsStickyLeft { set; get; } = false;
     [Parameter] public EventCallback<T> EditClicked { get; set; }
 
     private string SearchText { get; set; } = "";

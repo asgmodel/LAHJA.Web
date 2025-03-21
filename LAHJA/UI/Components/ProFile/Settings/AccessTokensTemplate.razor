@@ -26,7 +26,9 @@
                    LabelColumns="@ColomnsTrans[lg]"  
 
                    ISShowColumnsEdit="true" 
-                   
+
+                   IsStickyLeft="@(lg=="ar")"
+                   IsStickyRight="@(lg != "ar")"
 
                     @* يمكنك اضافة اي  خصائص لي  DataGrid *@
                     RowsPerPage="5" Filterable="true"
